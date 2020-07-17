@@ -1,3 +1,4 @@
+using AutoMapper;
 using CourseLibrary.API.DbContexts;
 using CourseLibrary.API.Services;
 using Microsoft.AspNetCore.Builder;
@@ -8,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
 
 namespace CourseLibrary.API
 {
@@ -27,7 +29,10 @@ namespace CourseLibrary.API
             {
                 setupAction.ReturnHttpNotAcceptable = true;
             }).AddXmlDataContractSerializerFormatters();
-             
+
+            // Autommapper
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
             services.AddScoped<ICourseLibraryRepository, CourseLibraryRepository>();
 
             services.AddDbContext<CourseLibraryContext>(options =>

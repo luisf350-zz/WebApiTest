@@ -1,9 +1,10 @@
-﻿using CourseLibrary.API.Services;
+﻿using AutoMapper;
+using CourseLibrary.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using WebApiTest.API.Helpers;
+using WebApiTest.API.Models;
 
 namespace WebApiTest.API.Controllers
 {
@@ -12,18 +13,20 @@ namespace WebApiTest.API.Controllers
     public class AuthorsController : ControllerBase
     {
         private readonly ICourseLibraryRepository _courseLibraryRepository;
+        private readonly IMapper _mapper;
 
-        public AuthorsController(ICourseLibraryRepository courseLibraryRepository)
+        public AuthorsController(ICourseLibraryRepository courseLibraryRepository, IMapper mapper)
         {
             _courseLibraryRepository = courseLibraryRepository ?? throw new ArgumentException(nameof(courseLibraryRepository));
+            _mapper = mapper ?? throw new ArgumentException(nameof(mapper));
         }
 
         [HttpGet]
-        public IActionResult GetAuthors()
+        public ActionResult<IEnumerable<AuthorDto>> GetAuthors()
         {
             var authorsFromRepo = _courseLibraryRepository.GetAuthors();
 
-            return Ok(authorsFromRepo);
+            return Ok(_mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo));
         }
 
         [HttpGet("{authorId}")]
@@ -35,7 +38,8 @@ namespace WebApiTest.API.Controllers
             {
                 return NotFound();
             }
-            return Ok(authorFromRepo);
+
+            return Ok(_mapper.Map<AuthorDto>(authorFromRepo));
         }
     }
 }
