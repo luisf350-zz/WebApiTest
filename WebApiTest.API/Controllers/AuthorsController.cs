@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using WebApiTest.API.Helpers;
 using WebApiTest.API.Models;
+using WebApiTest.API.ResourceParameters;
 
 namespace WebApiTest.API.Controllers
 {
@@ -22,9 +23,10 @@ namespace WebApiTest.API.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<AuthorDto>> GetAuthors()
+        [HttpHead]
+        public ActionResult<IEnumerable<AuthorDto>> GetAuthors([FromQuery] AuthorsResourceParameters authorsResourceParameters)
         {
-            var authorsFromRepo = _courseLibraryRepository.GetAuthors();
+            var authorsFromRepo = _courseLibraryRepository.GetAuthors(authorsResourceParameters);
 
             return Ok(_mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo));
         }
