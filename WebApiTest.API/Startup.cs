@@ -4,7 +4,9 @@ using CourseLibrary.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,7 +30,48 @@ namespace CourseLibrary.API
             services.AddControllers(setupAction =>
             {
                 setupAction.ReturnHttpNotAcceptable = true;
-            }).AddXmlDataContractSerializerFormatters();
+            })
+                .AddXmlDataContractSerializerFormatters()
+                .ConfigureApiBehaviorOptions(setupAction =>
+                {
+                    setupAction.InvalidModelStateResponseFactory = context =>
+                    {
+                        // create a problem details object
+                        var problemDetailsFactory = context.HttpContext.RequestServices
+                        .GetRequiredService<ProblemDetailsFactory>();
+                        var problemDetails = problemDetailsFactory
+                        .CreateValidationProblemDetails(context.HttpContext, context.ModelState);
+
+                        // add additional ifno not added by default
+                        problemDetails.Detail = "See the errors field for details";
+                        problemDetails.Instance = context.HttpContext.Request.Path;
+                        problemDetails.Title = "One or more validation errors occurred.";
+
+                        // find out which status code to use
+                        var actionExecutingContext = context as Microsoft.AspNetCore.Mvc.Filters.ActionExecutingContext;
+
+                        // if there are ModelState errors and also all arguments were correctly
+                        // found/parsed we're dealing with validations errors
+                        if ((context.ModelState.ErrorCount > 0) &&
+                        (actionExecutingContext?.ActionArguments.Count == context.ActionDescriptor.Parameters.Count))
+                        {
+                            problemDetails.Type = "https://courselibrary.com/modelvalidationproblem";
+                            problemDetails.Status = StatusCodes.Status422UnprocessableEntity;
+                        }
+                        else
+                        {
+                            // if one of the arguments wasn't correctly found / couldn't be parsed
+                            // we.re dealing with null/unparseable input
+                            problemDetails.Status = StatusCodes.Status400BadRequest;
+                        }
+                        
+                        return new UnprocessableEntityObjectResult(problemDetails)
+                        {
+                            ContentTypes = { "application/problem+json" }
+                        };
+
+                    };
+                });
 
             // Autommapper
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
@@ -39,7 +82,7 @@ namespace CourseLibrary.API
             {
                 options.UseSqlServer(
                     @"Server=LEGION\SQLSERVER2019;Database=CourseLibraryDB;Trusted_Connection=True;");
-            }); 
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
