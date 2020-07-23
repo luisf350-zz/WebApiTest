@@ -82,7 +82,15 @@ namespace WebApiTest.API.Controllers
             var courseForAuthorRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
             if (courseForAuthorRepo == null)
             {
-                return NotFound();
+                var courseToAdd = _mapper.Map<Course>(course);
+                courseToAdd.Id = courseId;
+
+                _courseLibraryRepository.AddCourse(authorId, courseToAdd);
+                _courseLibraryRepository.Save();
+
+                var courseToReturn = _mapper.Map<CourseDto>(courseToAdd);
+
+                return CreatedAtRoute("GetCourseForAuthor", new { authorId, courseId = courseToReturn.Id }, courseToReturn);
             }
 
             // Map the entity to a CourseForUpdateDto
@@ -91,7 +99,6 @@ namespace WebApiTest.API.Controllers
             _mapper.Map(course, courseForAuthorRepo);
 
             _courseLibraryRepository.UpdateCourse(courseForAuthorRepo);
-
             _courseLibraryRepository.Save();
 
             return NoContent();
