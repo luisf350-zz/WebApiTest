@@ -6,6 +6,7 @@ using AutoMapper;
 using CourseLibrary.API.Entities;
 using CourseLibrary.API.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using WebApiTest.API.Models;
 
@@ -98,6 +99,30 @@ namespace WebApiTest.API.Controllers
             // Map the CourseForUpdateDto back to an entity
             _mapper.Map(course, courseForAuthorRepo);
 
+            _courseLibraryRepository.UpdateCourse(courseForAuthorRepo);
+            _courseLibraryRepository.Save();
+
+            return NoContent();
+        }
+
+        [HttpPatch("{courseId}")]
+        public IActionResult PartiallyUpdateCourseForAuthor(Guid authorId, Guid courseId, JsonPatchDocument<CourseForUpdateDto> patchDocument)
+        {
+            if (!_courseLibraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var courseForAuthorRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
+            if (courseForAuthorRepo == null)
+            {
+                return NotFound();
+            }
+            var courseToPatch = _mapper.Map<CourseForUpdateDto>(courseForAuthorRepo);
+            // TODO: Add validation
+            patchDocument.ApplyTo(courseToPatch);
+
+            _mapper.Map(courseToPatch, courseForAuthorRepo);
             _courseLibraryRepository.UpdateCourse(courseForAuthorRepo);
             _courseLibraryRepository.Save();
 
