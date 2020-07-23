@@ -119,8 +119,13 @@ namespace WebApiTest.API.Controllers
                 return NotFound();
             }
             var courseToPatch = _mapper.Map<CourseForUpdateDto>(courseForAuthorRepo);
-            // TODO: Add validation
-            patchDocument.ApplyTo(courseToPatch);
+            patchDocument.ApplyTo(courseToPatch, ModelState);
+
+            // Add validation
+            if (!TryValidateModel(courseToPatch))
+            {
+                return ValidationProblem(ModelState);
+            }
 
             _mapper.Map(courseToPatch, courseForAuthorRepo);
             _courseLibraryRepository.UpdateCourse(courseForAuthorRepo);
