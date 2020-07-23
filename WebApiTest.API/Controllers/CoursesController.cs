@@ -70,5 +70,31 @@ namespace WebApiTest.API.Controllers
             var courseToReturn = _mapper.Map<CourseDto>(courseEntity);
             return CreatedAtRoute("GetCourseForAuthor", new { authorId = authorId, courseId = courseToReturn.Id }, courseToReturn);
         }
+
+        [HttpPut("{courseId}")]
+        public IActionResult UpdateCourseForAuthor(Guid authorId, Guid courseId, CourseForUpdateDto course)
+        {
+            if (!_courseLibraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var courseForAuthorRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
+            if (courseForAuthorRepo == null)
+            {
+                return NotFound();
+            }
+
+            // Map the entity to a CourseForUpdateDto
+            // Apply the updated field values to that Dto
+            // Map the CourseForUpdateDto back to an entity
+            _mapper.Map(course, courseForAuthorRepo);
+
+            _courseLibraryRepository.UpdateCourse(courseForAuthorRepo);
+
+            _courseLibraryRepository.Save();
+
+            return NoContent();
+        }
     }
 }
