@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json.Serialization;
 using System;
+using WebApiTest.API.Services;
 
 namespace CourseLibrary.API
 {
@@ -77,6 +78,9 @@ namespace CourseLibrary.API
 
                     };
                 });
+
+            // Register PropertyMappingService
+            services.AddTransient<IPropertyMappingService, PropertyMappingService>();
 
             // Autommapper
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
