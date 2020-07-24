@@ -154,12 +154,36 @@ namespace WebApiTest.API.Controllers
             return NoContent();
         }
 
+        [HttpDelete("{courseId}")]
+        public IActionResult DeleteCourseForAuthor(Guid authorId, Guid courseId)
+        {
+            if (!_courseLibraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var courseForAuthorRepo = _courseLibraryRepository.GetCourse(authorId, courseId);
+            if (courseForAuthorRepo == null)
+            {
+                return NotFound();
+            }
+
+            _courseLibraryRepository.DeleteCourse(courseForAuthorRepo);
+            _courseLibraryRepository.Save();
+
+            return NoContent();
+        }
+
+        #region Override
+
         public override ActionResult ValidationProblem([ActionResultObjectValue] ModelStateDictionary modelStateDictionary)
         {
             var options = HttpContext.RequestServices.GetRequiredService<IOptions<ApiBehaviorOptions>>();
 
-
             return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
         }
+
+        #endregion
+
     }
 }
