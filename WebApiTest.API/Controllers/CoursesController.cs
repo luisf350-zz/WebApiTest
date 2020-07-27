@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using AutoMapper;
 using CourseLibrary.API.Entities;
 using CourseLibrary.API.Services;
@@ -31,7 +29,7 @@ namespace WebApiTest.API.Controllers
                 throw new ArgumentException(nameof(mapper));
         }
 
-        [HttpGet]
+        [HttpGet(Name = "GetCoursesForAuthor")]
         public ActionResult<IEnumerable<CourseDto>> GetCoursesForAuthor(Guid authorId)
         {
             if (!_courseLibraryRepository.AuthorExists(authorId))
@@ -60,7 +58,7 @@ namespace WebApiTest.API.Controllers
             return Ok(_mapper.Map<CourseDto>(courseForAuthorRepo));
         }
 
-        [HttpPost]
+        [HttpPost(Name = "CreateCourseForAuthor")]
         public ActionResult<CourseDto> CreateCourseForAuthor(Guid authorId, CourseForCreationDto course)
         {
             if (!_courseLibraryRepository.AuthorExists(authorId))

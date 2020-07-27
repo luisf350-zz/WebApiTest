@@ -4,6 +4,7 @@ using CourseLibrary.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using WebApiTest.API.Helpers;
 using WebApiTest.API.Models;
@@ -46,27 +47,37 @@ namespace WebApiTest.API.Controllers
 
             var authorsFromRepo = _courseLibraryRepository.GetAuthors(authorsResourceParameters);
 
-            var previousPageLink = authorsFromRepo.HasPrevious ?
-                CreateAuthorsResourceUr(authorsResourceParameters, ResourceUriType.PreviousPage) 
-                : null;
-
-            var nextPageLink = authorsFromRepo.HasNext ?
-                CreateAuthorsResourceUr(authorsResourceParameters, ResourceUriType.NextPage)
-                : null;
-
             var paginationMetadata = new
             {
                 totalCount = authorsFromRepo.TotalCount,
                 pageSize = authorsFromRepo.PageSize,
                 currentPage = authorsFromRepo.CurrentPage,
-                totalPages = authorsFromRepo.TotalPages,
-                previousPageLink,
-                nextPageLink
+                totalPages = authorsFromRepo.TotalPages
             };
 
             Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
 
-            return Ok(_mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo).ShapeData(authorsResourceParameters.Fields));
+            var links = CreateLinksForAuthors(authorsResourceParameters, authorsFromRepo.HasNext, 
+                authorsFromRepo.HasPrevious);
+
+            var shapedAuthors = _mapper.Map<IEnumerable<AuthorDto>>(authorsFromRepo)
+                .ShapeData(authorsResourceParameters.Fields);
+
+            var shapedAuthorsWithLinks = shapedAuthors.Select(x=>
+            {
+                var autorAsDictionary = authorsFromRepo as IDictionary<string, object>;
+                var authorLinks = CreateLinksForAuthor((Guid)autorAsDictionary["id"], null);
+                autorAsDictionary.Add("links", authorLinks);
+                return autorAsDictionary;
+            });
+
+            var linkedCollectionResource = new 
+            {
+                value = shapedAuthorsWithLinks,
+                links
+            };
+
+            return Ok(linkedCollectionResource);
         }
 
         [HttpGet("{authorId}", Name = "GetAuthor")]
@@ -84,10 +95,17 @@ namespace WebApiTest.API.Controllers
                 return NotFound();
             }
 
-            return Ok(_mapper.Map<AuthorDto>(authorFromRepo).ShapeData(fields));
+            var links = CreateLinksForAuthor(authorId, fields);
+
+            var linkedResourceToReturn = _mapper.Map<AuthorDto>(authorFromRepo)
+                .ShapeData(fields) as IDictionary<string, object>;
+
+            linkedResourceToReturn.Add("links", links);
+
+            return Ok(linkedResourceToReturn);
         }
 
-        [HttpPost]
+        [HttpPost(Name = "CreateAuthor")]
         public ActionResult<AuthorDto> CreateAuthor(AuthorForCreationDto author)
         {
             var authorEntity = _mapper.Map<Author>(author);
@@ -96,7 +114,13 @@ namespace WebApiTest.API.Controllers
 
             var authorToReturn = _mapper.Map<AuthorDto>(authorEntity);
 
-            return CreatedAtRoute("GetAuthor", new { authorId = authorToReturn.Id }, authorToReturn);
+            var links = CreateLinksForAuthor(authorToReturn.Id, null);
+
+            var linkedResourceToReturn = authorToReturn.ShapeData(null) as IDictionary<string, object>;
+
+            linkedResourceToReturn.Add("links", links);
+
+            return CreatedAtRoute("GetAuthor", new { authorId = linkedResourceToReturn["Id"] }, linkedResourceToReturn);
 
         }
 
@@ -107,7 +131,7 @@ namespace WebApiTest.API.Controllers
             return Ok();
         }
 
-        [HttpDelete("{authorId}")]
+        [HttpDelete("{authorId}", Name = "DeleteAuthor")]
         public IActionResult DeleteAuthor(Guid authorId)
         {
             var authorFromRepo = _courseLibraryRepository.GetAuthor(authorId);
@@ -125,7 +149,7 @@ namespace WebApiTest.API.Controllers
 
         #region Private Methods
 
-        private string CreateAuthorsResourceUr(AuthorsResourceParameters authorsResourceParameters, ResourceUriType type)
+        private string CreateAuthorsResourceUri(AuthorsResourceParameters authorsResourceParameters, ResourceUriType type)
         {
             switch (type)
             {
@@ -149,6 +173,7 @@ namespace WebApiTest.API.Controllers
                         mainCategory = authorsResourceParameters.MainCategory,
                         searchQuery = authorsResourceParameters.SearchQuery
                     });
+                case ResourceUriType.Current:
                 default:
                     return Url.Link("GetAuthors", new
                     {
@@ -160,6 +185,73 @@ namespace WebApiTest.API.Controllers
                         searchQuery = authorsResourceParameters.SearchQuery
                     });
             }
+        }
+
+        private IEnumerable<LinkDto> CreateLinksForAuthor(Guid authorId, string fields)
+        {
+            var links = new List<LinkDto>();
+
+            if (string.IsNullOrEmpty(fields))
+            {
+                links.Add(
+                    new LinkDto(Url.Link("GetAuthor", new {authorId}), 
+                    "self",
+                    "GET"));
+            }
+            else
+            {
+                links.Add(
+                    new LinkDto(Url.Link("GetAuthor", new {authorId, fields}), 
+                    "self",
+                    "GET"));
+            }
+
+            links.Add(
+                    new LinkDto(Url.Link("DeleteAuthor", new {authorId}), 
+                    "delete_author",
+                    "DELETE"));
+            links.Add(
+                    new LinkDto(Url.Link("CreateCourseForAuthor", new {authorId}), 
+                    "create_course_for_author",
+                    "POST"));
+            links.Add(
+                    new LinkDto(Url.Link("GetCoursesForAuthor", new {authorId}), 
+                    "courses",
+                    "GET"));
+
+            return links;
+        }
+
+        private IEnumerable<LinkDto> CreateLinksForAuthors(AuthorsResourceParameters authorsResourceParameters,
+            bool hasNext, bool HasPrevious)
+        {
+            var links = new List<LinkDto>();
+
+            // Self
+            links.Add(
+                    new LinkDto(CreateAuthorsResourceUri(authorsResourceParameters, ResourceUriType.Current), 
+                    "self",
+                    "GET"));
+
+            if (hasNext)
+            {
+                // Next
+                links.Add(
+                        new LinkDto(CreateAuthorsResourceUri(authorsResourceParameters, ResourceUriType.NextPage), 
+                        "next_page",
+                        "GET"));
+            }
+
+            if (hasNext)
+            {
+                // Previous
+                links.Add(
+                        new LinkDto(CreateAuthorsResourceUri(authorsResourceParameters, ResourceUriType.PreviousPage), 
+                        "next_previous",
+                        "GET"));
+            }
+
+            return links;   
         }
 
         #endregion
