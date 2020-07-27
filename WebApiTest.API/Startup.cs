@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -81,6 +80,9 @@ namespace CourseLibrary.API
 
             // Register PropertyMappingService
             services.AddTransient<IPropertyMappingService, PropertyMappingService>();
+
+            // Register PropertyCheckerService
+            services.AddTransient<IPropertyCheckerService, PropertyCheckerService>();
 
             // Autommapper
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
