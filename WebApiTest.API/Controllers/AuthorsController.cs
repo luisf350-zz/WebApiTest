@@ -111,6 +111,7 @@ namespace WebApiTest.API.Controllers
                 case ResourceUriType.PreviousPage:
                     return Url.Link("GetAuthors", new
                     {
+                        orderBy = authorsResourceParameters.OrderBy,
                         pageNumber = authorsResourceParameters.PageNumber - 1,
                         pageSize = authorsResourceParameters.PageSize,
                         mainCategory = authorsResourceParameters.MainCategory,
@@ -119,6 +120,7 @@ namespace WebApiTest.API.Controllers
                 case ResourceUriType.NextPage:
                     return Url.Link("GetAuthors", new
                     {
+                        orderBy = authorsResourceParameters.OrderBy,
                         pageNumber = authorsResourceParameters.PageNumber + 1,
                         pageSize = authorsResourceParameters.PageSize,
                         mainCategory = authorsResourceParameters.MainCategory,
@@ -127,6 +129,7 @@ namespace WebApiTest.API.Controllers
                 default:
                     return Url.Link("GetAuthors", new
                     {
+                        orderBy = authorsResourceParameters.OrderBy,
                         pageNumber = authorsResourceParameters.PageNumber,
                         pageSize = authorsResourceParameters.PageSize,
                         mainCategory = authorsResourceParameters.MainCategory,
