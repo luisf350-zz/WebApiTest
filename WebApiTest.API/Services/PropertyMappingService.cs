@@ -23,6 +23,42 @@ namespace WebApiTest.API.Services
             _propertyMappings.Add(new PropertyMapping<AuthorDto, Author>(_authorPropertyMapping));
         }
 
+        public bool ValidMappingExistsFor<TSource, TDestination>(string fields)
+        {
+            var propertyMapping = GetPropertyMapping<TSource, TDestination>();
+
+            if (string.IsNullOrEmpty(fields))
+            {
+                return true;
+            }
+
+            // The string is separated by ",", so we split it
+            var fieldsAfterSplit = fields.Split(',');
+
+            // Run through the fields clauses
+            foreach (var field in fieldsAfterSplit)
+            {
+                // Trim
+                var trimmedField = field.Trim();
+
+                // Remove everything after the first " " - if the fields
+                // are coming from an orderBy string, this part must be
+                // ignored
+                var indexOfFirstSpace = trimmedField.IndexOf(" ");
+                var propertyName = indexOfFirstSpace == -1 ?
+                    trimmedField :
+                    trimmedField.Remove(indexOfFirstSpace);
+
+                // Find the matching property
+                if (!propertyMapping.ContainsKey(propertyName))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public Dictionary<string, PropertyMappingValue> GetPropertyMapping<TSource, TDestination>()
         {
             // Get matching mapping

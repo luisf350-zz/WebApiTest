@@ -8,6 +8,7 @@ using System.Text.Json;
 using WebApiTest.API.Helpers;
 using WebApiTest.API.Models;
 using WebApiTest.API.ResourceParameters;
+using WebApiTest.API.Services;
 
 namespace WebApiTest.API.Controllers
 {
@@ -17,17 +18,23 @@ namespace WebApiTest.API.Controllers
     {
         private readonly ICourseLibraryRepository _courseLibraryRepository;
         private readonly IMapper _mapper;
+        private readonly IPropertyMappingService _propertyMappingService;
 
-        public AuthorsController(ICourseLibraryRepository courseLibraryRepository, IMapper mapper)
+        public AuthorsController(ICourseLibraryRepository courseLibraryRepository, IMapper mapper, IPropertyMappingService propertyMappingService)
         {
             _courseLibraryRepository = courseLibraryRepository ?? throw new ArgumentException(nameof(courseLibraryRepository));
             _mapper = mapper ?? throw new ArgumentException(nameof(mapper));
+            _propertyMappingService = propertyMappingService ?? throw new ArgumentException(nameof(propertyMappingService));
         }
 
         [HttpGet(Name = "GetAuthors")]
         [HttpHead]
         public ActionResult<IEnumerable<AuthorDto>> GetAuthors([FromQuery] AuthorsResourceParameters authorsResourceParameters)
         {
+            if (!_propertyMappingService.ValidMappingExistsFor<AuthorDto, Author>(authorsResourceParameters.OrderBy))
+            {
+                return BadRequest();
+            }
             var authorsFromRepo = _courseLibraryRepository.GetAuthors(authorsResourceParameters);
 
             var previousPageLink = authorsFromRepo.HasPrevious ?
