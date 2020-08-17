@@ -16,6 +16,7 @@ namespace WebApiTest.API.Controllers
 {
     [Route("api/authors/{authorId}/[controller]")]
     [ApiController]
+    [ResponseCache(CacheProfileName = "240SecondsCacheProfile")]
     public class CoursesController : ControllerBase
     {
         private readonly ICourseLibraryRepository _courseLibraryRepository;
@@ -42,6 +43,7 @@ namespace WebApiTest.API.Controllers
         }
 
         [HttpGet("{courseId}", Name = "GetCourseForAuthor")]
+        [ResponseCache(Duration = 120)]
         public ActionResult<CourseDto> GetCourseForAuthor(Guid authorId, Guid courseId)
         {
             if (!_courseLibraryRepository.AuthorExists(authorId))
@@ -126,7 +128,7 @@ namespace WebApiTest.API.Controllers
                     return ValidationProblem(ModelState);
                 }
 
-                var courseToAdd = _mapper.Map < Course>(courseDto);
+                var courseToAdd = _mapper.Map<Course>(courseDto);
                 courseToAdd.Id = courseId;
 
                 _courseLibraryRepository.AddCourse(authorId, courseToAdd);
