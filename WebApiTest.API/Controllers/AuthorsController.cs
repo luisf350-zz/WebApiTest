@@ -81,6 +81,13 @@ namespace WebApiTest.API.Controllers
             return Ok(linkedCollectionResource);
         }
 
+        /// <summary>
+        /// Get a author by Id
+        /// </summary>
+        /// <param name="authorId">Id of the record</param>
+        /// <param name="fields">Fields that will be return</param>
+        /// <param name="mediaType">Media type</param>
+        /// <returns></returns>
         [HttpGet("{authorId}", Name = "GetAuthor")]
         public IActionResult GetAuthor(Guid authorId, string fields, 
             [FromHeader(Name ="Accept")] string mediaType)

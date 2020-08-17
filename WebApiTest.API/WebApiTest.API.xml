@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>WebApiTest.API</name>
+    </assembly>
+    <members>
+        <member name="M:WebApiTest.API.Controllers.AuthorsController.GetAuthor(System.Guid,System.String,System.String)">
+            <summary>
+            Get a author by Id
+            </summary>
+            <param name="authorId">Id of the record</param>
+            <param name="fields">Fields that will be return</param>
+            <param name="mediaType">Media type</param>
+            <returns></returns>
+        </member>
+        <member name="T:WebApiTest.API.Models.AuthorDto">
+            <summary>
+            An author wit Id, Name, Age and Main Category
+            </summary>
+        </member>
+        <member name="P:WebApiTest.API.Models.AuthorDto.Id">
+            <summary>
+            Id of the Author
+            </summary>
+        </member>
+        <member name="P:WebApiTest.API.Models.AuthorDto.Name">
+            <summary>
+            Name of the Author
+            </summary>
+        </member>
+        <member name="P:WebApiTest.API.Models.AuthorDto.Age">
+            <summary>
+            Age of the Author
+            </summary>
+        </member>
+        <member name="P:WebApiTest.API.Models.AuthorDto.MainCategory">
+            <summary>
+            Main Category of the Author
+            </summary>
+        </member>
+    </members>
+</doc>

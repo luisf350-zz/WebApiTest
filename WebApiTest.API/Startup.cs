@@ -13,7 +13,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using WebApiTest.API.Services;
 
 namespace CourseLibrary.API
@@ -101,6 +103,27 @@ namespace CourseLibrary.API
             // Autommapper
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
+            services.AddSwaggerGen(setupAction =>
+            {
+                setupAction.SwaggerDoc("LibraryOpenAPISpecification", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = "Library API",
+                    Version = "1",
+                    Description = "Through this API you can access authors and their books.",
+                    Contact = new Microsoft.OpenApi.Models.OpenApiContact
+                    {
+                        Email = "luisf350@gmail.com",
+                        Name = "Luis Ramirez",
+                        Url = new Uri("https://www.github.com/luisf350")
+                    }
+                });
+
+                var xmlCommentsFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlCommentsFullPath = Path.Combine(AppContext.BaseDirectory, xmlCommentsFile);
+
+                setupAction.IncludeXmlComments(xmlCommentsFullPath);
+            });
+
             services.AddScoped<ICourseLibraryRepository, CourseLibraryRepository>();
 
             services.AddDbContext<CourseLibraryContext>(options =>
@@ -130,6 +153,15 @@ namespace CourseLibrary.API
             }
 
             app.UseRouting();
+
+            app.UseSwagger();
+            app.UseSwaggerUI(setupAction =>
+            {
+                setupAction.SwaggerEndpoint(
+                    "/swagger/LibraryOpenAPISpecification/swagger.json",
+                    "Library API");
+                setupAction.RoutePrefix = string.Empty;
+            });
 
             app.UseAuthorization();
 
